@@ -182,4 +182,26 @@
     AND question=#{question}
     AND  answer = #{answer}
   </select>
+
+  <update id="updatePasswordByUsername" parameterType="map" >
+    UPDATE mmall_user
+    SET password=#{password} , update_time = now()
+    WHERE username=#{username}
+  </update>
+
+  <select id="checkPassword" parameterType="map" resultType="int">
+    SELECT
+    count(1)
+    from mmall_user
+    WHERE id=#{userId}
+    AND password=#{password}
+  </select>
+
+  <select id="checkUpdateEmail" parameterType="map" resultType="int">
+    SELECT
+    count(1)
+    from mmall_user
+    WHERE id=#{userId}
+    and email != #{email}
+  </select>
 </mapper>

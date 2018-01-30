@@ -14,5 +14,11 @@ public interface IUserService {
 
     ServiceResponse checkQuestionAnswer(String username, String question, String answer);
 
+    ServiceResponse forgetResetPassword(String username, String passwordNew, String forgetToken);
 
+    ServiceResponse resetPassword(String passwordOld, String passwordNew, User user);
+
+    ServiceResponse updateUserInfo(User user);
+
+    ServiceResponse getInformation(Integer userId);
 }

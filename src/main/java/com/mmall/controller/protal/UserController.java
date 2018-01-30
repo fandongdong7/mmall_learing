@@ -1,6 +1,7 @@
 package com.mmall.controller.protal;
 
 import com.mmall.common.Const;
+import com.mmall.common.ResponseCode;
 import com.mmall.common.ServiceResponse;
 import com.mmall.pojo.User;
 import com.mmall.service.IUserService;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpSession;
 
 @Controller
@@ -79,6 +81,7 @@ public class UserController {
         }
         return ServiceResponse.createBySuccess(user);
     }
+
     /**
      * 获取用户问题接口
      */
@@ -93,7 +96,63 @@ public class UserController {
      */
     @RequestMapping(value = "froget_check_question.do", method = RequestMethod.POST)
     @ResponseBody
-    public ServiceResponse checkQuestionAnswer(String username, String question, String answer) {
-        return iUserService.checkQuestionAnswer(username,question,answer);
+    public ServiceResponse<String> checkQuestionAnswer(String username, String question, String answer) {
+        return iUserService.checkQuestionAnswer(username, question, answer);
+    }
+
+    /**
+     * 忘记密码重置密码
+     */
+    @RequestMapping(value = "froget_reset_password.do", method = RequestMethod.POST)
+    @ResponseBody
+    public ServiceResponse<String> forgetResetPassword(String username, String passwordNew, String forgetToken) {
+        return iUserService.forgetResetPassword(username, passwordNew, forgetToken);
+    }
+
+    /**
+     * 登录状态下的修改密码
+     */
+    @RequestMapping(value = "reset_password.do", method = RequestMethod.POST)
+    @ResponseBody
+    public ServiceResponse<String> resetPassword(HttpSession session, String passwordOld, String passwordNew) {
+        //判断当前用户是否登录
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServiceResponse.createByErrorMessage("用户未登录");
+        }
+        return iUserService.resetPassword(passwordOld, passwordNew, user);
+    }
+
+    /**
+     * 更新用户个人信息
+     */
+
+    public ServiceResponse<User> updateUserInfo(HttpSession session, User user) {
+        //判断当前用户是否登录
+        User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
+        if (currentUser == null) {
+            return ServiceResponse.createByErrorMessage("用户未登录");
+        }
+//        将当user的id设置为当前用户的id
+        user.setId(currentUser.getId());
+        user.setUsername(currentUser.getUsername());
+        ServiceResponse response = iUserService.updateUserInfo(user);
+        if (response.isSuccess()) {
+            //更新session信息
+            session.setAttribute(Const.CURRENT_USER,response.getData());
+        }
+        return response;
+    }
+
+    /**
+     * 获取详细用户信息
+     */
+
+    public ServiceResponse<User> getInfomation(HttpSession session) {
+        User user = (User) session.getAttribute(Const.CURRENT_USER);
+        if (user == null) {
+            return ServiceResponse.createByErrorMessage(ResponseCode.NEED_LOGIN.getCode(), "未登录需要强制登录");
+        }
+        return iUserService.getInformation(user.getId());
     }
 }
