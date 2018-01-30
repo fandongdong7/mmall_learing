@@ -20,10 +20,11 @@ public class UserServiceImpl implements IUserService {
         if (resultCount == 0) {
             return ServiceResponse.createByErrorMessage("username is not exist");
         }
-        //todo password md5
+        //todo password need md5
+
         User user = userMapper.selectLogin(username, password);
         if (user == null) {
-            return ServiceResponse.createByErrorMessage("password ");
+            return ServiceResponse.createByErrorMessage("password is error");
         }
         user.setPassword(StringUtils.EMPTY);
         return ServiceResponse.createBySuccess("login success", user);
