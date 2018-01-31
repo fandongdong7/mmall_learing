@@ -198,10 +198,8 @@
   </select>
 
   <select id="checkUpdateEmail" parameterType="map" resultType="int">
-    SELECT
-    count(1)
-    from mmall_user
-    WHERE id=#{userId}
-    and email != #{email}
+    select count(1) from mmall_user
+    where email = #{email}
+    and id != #{userId}
   </select>
 </mapper>

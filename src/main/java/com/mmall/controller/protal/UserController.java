@@ -73,7 +73,8 @@ public class UserController {
     /**
      * 获取用户信息
      */
-
+    @RequestMapping(value = "get_user_info.do", method = RequestMethod.POST)
+    @ResponseBody
     public ServiceResponse<User> getUserInfo(HttpSession session) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {
@@ -126,7 +127,8 @@ public class UserController {
     /**
      * 更新用户个人信息
      */
-
+    @RequestMapping(value = "update_user_info.do", method = RequestMethod.POST)
+    @ResponseBody
     public ServiceResponse<User> updateUserInfo(HttpSession session, User user) {
         //判断当前用户是否登录
         User currentUser = (User) session.getAttribute(Const.CURRENT_USER);
@@ -147,7 +149,8 @@ public class UserController {
     /**
      * 获取详细用户信息
      */
-
+    @RequestMapping(value = "get_information.do", method = RequestMethod.POST)
+    @ResponseBody
     public ServiceResponse<User> getInfomation(HttpSession session) {
         User user = (User) session.getAttribute(Const.CURRENT_USER);
         if (user == null) {

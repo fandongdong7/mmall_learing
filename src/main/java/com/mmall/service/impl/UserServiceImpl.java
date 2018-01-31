@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -151,7 +152,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public ServiceResponse updateUserInfo(User user) {
         //判断邮箱是否可用（除了自己的以外）
-        int result = userMapper.checkUpdateEmail(user.getId(), user.getEmail());
+        int result = userMapper.checkUpdateEmail(user.getEmail(),user.getId());
         if (result > 0) {
             return ServiceResponse.createByErrorMessage("邮箱不可用");
         }
@@ -161,6 +162,9 @@ public class UserServiceImpl implements IUserService {
         updateUser.setEmail(user.getEmail());
         updateUser.setPhone(user.getPhone());
         updateUser.setQuestion(user.getQuestion());
+        updateUser.setRole(user.getRole());
+        updateUser.setCreateTime(user.getCreateTime());
+        updateUser.setUpdateTime(new Date());
         updateUser.setAnswer(user.getAnswer());
 
         //更新db
