@@ -27,6 +27,7 @@ public class ManageCategoryServiceImpl implements IManageCategoryService {
         }
         Category category = new Category();
         category.setName(categoryName);
+        category.setStatus(true);
         category.setParentId(parentId);
 
         int resutltDB = categoryMapper.insert(category);
