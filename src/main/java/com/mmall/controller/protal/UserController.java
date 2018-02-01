@@ -158,4 +158,5 @@ public class UserController {
         }
         return iUserService.getInformation(user.getId());
     }
+
 }

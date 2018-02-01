@@ -21,4 +21,6 @@ public interface IUserService {
     ServiceResponse  updateUserInfo(User user);
 
     ServiceResponse getInformation(Integer userId);
+
+    ServiceResponse chekUserIsAdmin(User user);
 }

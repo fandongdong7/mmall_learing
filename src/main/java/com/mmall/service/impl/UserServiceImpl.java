@@ -1,6 +1,7 @@
 package com.mmall.service.impl;
 
 import com.mmall.common.Const;
+import com.mmall.common.ResponseCode;
 import com.mmall.common.ServiceResponse;
 import com.mmall.common.TokenCache;
 import com.mmall.dao.UserMapper;
@@ -182,5 +183,12 @@ public class UserServiceImpl implements IUserService {
         }
         user.setPassword(org.apache.commons.lang3.StringUtils.EMPTY);
         return ServiceResponse.createBySuccess(user);
+    }
+
+    public ServiceResponse chekUserIsAdmin(User user) {
+        if (user!=null && user.getRole() == Const.Role.ROLE_ADMIN) {
+            return ServiceResponse.createBySuccess();
+        }
+        return ServiceResponse.createByError();
     }
 }
