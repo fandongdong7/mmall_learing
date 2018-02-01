@@ -101,6 +101,8 @@ public class ManageCategoryController {
      * @param categoryId
      * @return
      */
+    @RequestMapping("get_deep_category.do")
+    @ResponseBody
     public ServiceResponse<List<Integer>> getDeepChildren(HttpSession session, @RequestParam(value = "categoryId", defaultValue = "0") Integer categoryId) {
         //校验用户是否登录
         User user = (User) session.getAttribute(Const.CURRENT_USER);

@@ -5,8 +5,9 @@ import com.mmall.common.ServiceResponse;
 import com.mmall.pojo.User;
 import com.mmall.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpSession;
 
@@ -16,7 +17,10 @@ public class UserManageController {
     @Autowired
     private IUserService iUserService;
 
+    @RequestMapping(value = "login.do", method = RequestMethod.POST)
+    @ResponseBody
     public ServiceResponse<User> login(String username, String password, HttpSession session) {
+
         ServiceResponse<User> response = iUserService.login(username, password);
         if (response.isSuccess()) {
             if (response.getData().getRole().equals(Const.Role.ROLE_ADMIN)) {
