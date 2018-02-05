@@ -65,6 +65,7 @@ public class ManageCategoryServiceImpl implements IManageCategoryService {
         return ServiceResponse.createBySuccess(childrenCategory);
     }
 
+    @Override
     public ServiceResponse<List<Integer>> getDeepChildre(Integer categoryId) {
         if (categoryId == null) {
             return ServiceResponse.createByErrorMessage("查询参数异常");
