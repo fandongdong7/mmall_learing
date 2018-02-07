@@ -3,17 +3,19 @@ package com.mmall.service;
 import com.mmall.common.ServiceResponse;
 import com.mmall.vo.CartVo;
 
+/**
+ * Created by geely
+ */
 public interface ICartService {
-
-    ServiceResponse<CartVo> addCart(Integer userId, Integer productId, Integer count);
-
-    ServiceResponse<CartVo> list(Integer userId);
+    ServiceResponse<CartVo> add(Integer userId, Integer productId, Integer count);
 
     ServiceResponse<CartVo> update(Integer userId, Integer productId, Integer count);
 
-    ServiceResponse<CartVo> delete(Integer userId, String  productIds);
+    ServiceResponse<CartVo> deleteProduct(Integer userId, String productIds);
 
-    ServiceResponse<CartVo> checkedOrUncheckedProduct(Integer userId, Integer productId, Integer checked);
+    ServiceResponse<CartVo> list(Integer userId);
+
+    ServiceResponse<CartVo> selectOrUnSelect(Integer userId, Integer productId, Integer checked);
 
     ServiceResponse<Integer> getCartProductCount(Integer userId);
 }

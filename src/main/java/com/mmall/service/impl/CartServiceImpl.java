@@ -21,63 +21,120 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 
-@Service
+import static com.mmall.common.ServiceResponse.createByErrorMessage;
+import static com.mmall.common.ServiceResponse.createBySuccess;
+
+/**
+ * Created by geely
+ */
+@Service("iCartService")
 public class CartServiceImpl implements ICartService {
+
     @Autowired
     private CartMapper cartMapper;
     @Autowired
     private ProductMapper productMapper;
 
-
     @Override
-    public ServiceResponse<CartVo> addCart(Integer userId, Integer productId, Integer count) {
-        if (productId == null || count == null) {
-            return ServiceResponse.createByErrorMessage("参数异常");
+    public ServiceResponse<CartVo> add(Integer userId, Integer productId, Integer count){
+        if(productId == null || count == null){
+            return ServiceResponse.createByErrorMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());
         }
-        //通过用户id和商品id查询购物车信息
-        Cart cart = cartMapper.selectCartByUserIdAndProductId(userId, productId);
-//        如果没有购物商品信息则创建一个新的购物车项存入购物车中
-        if (cart == null) {
-            //说明购物车中没有该商品，创建购物车
+
+
+        Cart cart = cartMapper.selectCartByUserIdProductId(userId,productId);
+        if(cart == null){
+            //这个产品不在这个购物车里,需要新增一个这个产品的记录
             Cart cartItem = new Cart();
-            cartItem.setUserId(userId);
+            cartItem.setQuantity(count);
             cartItem.setChecked(Const.Cart.CHECKED);
             cartItem.setProductId(productId);
-            cartItem.setQuantity(count);
-            int resultDB = cartMapper.insert(cartItem);
-            if (resultDB == 0) {
-                return ServiceResponse.createByErrorMessage("添加购物车失败");
-            }
-        } else {
-//        如果有购物车信息则在将商品数量相加
+            cartItem.setUserId(userId);
+            cartMapper.insert(cartItem);
+        }else{
+            //这个产品已经在购物车里了.
+            //如果产品已存在,数量相加
             count = cart.getQuantity() + count;
             cart.setQuantity(count);
-            //update DB
-            int resultDB = cartMapper.updateByPrimaryKeySelective(cart);
-            if (resultDB == 0) {
-                return ServiceResponse.createByErrorMessage("updateCart fail");
-            }
+            cartMapper.updateByPrimaryKeySelective(cart);
         }
-//        返回购物车信息
-        return ServiceResponse.createBySuccess(getCartVoLimit(userId));
+        return this.list(userId);
     }
 
-    private CartVo getCartVoLimit(Integer userId) {
+    @Override
+    public ServiceResponse<CartVo> update(Integer userId, Integer productId, Integer count){
+        if(productId == null || count == null){
+            return ServiceResponse.createByErrorMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());        }
+        Cart cart = cartMapper.selectCartByUserIdProductId(userId,productId);
+        if(cart != null){
+            cart.setQuantity(count);
+        }
+        cartMapper.updateByPrimaryKey(cart);
+        return this.list(userId);
+    }
+
+    @Override
+    public ServiceResponse<CartVo> deleteProduct(Integer userId, String productIds){
+        List<String> productList = Splitter.on(",").splitToList(productIds);
+        if(CollectionUtils.isEmpty(productList)){
+            return ServiceResponse.createByErrorMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(),ResponseCode.ILLEGAL_ARGUMENT.getDesc());        }
+        cartMapper.deleteByUserIdProductIds(userId,productList);
+        return this.list(userId);
+    }
+
+
+    @Override
+    public ServiceResponse<CartVo> list (Integer userId){
+        CartVo cartVo = this.getCartVoLimit(userId);
+        return ServiceResponse.createBySuccess(cartVo);
+    }
+
+
+
+    @Override
+    public ServiceResponse<CartVo> selectOrUnSelect (Integer userId, Integer productId, Integer checked){
+        cartMapper.checkedOrUncheckedProduct(userId,productId,checked);
+        return this.list(userId);
+    }
+
+    @Override
+    public ServiceResponse<Integer> getCartProductCount(Integer userId){
+        if(userId == null){
+            return createBySuccess(0);
+        }
+        return ServiceResponse.createBySuccess(cartMapper.selectCartProductCount(userId));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private CartVo getCartVoLimit(Integer userId){
         CartVo cartVo = new CartVo();
         List<Cart> cartList = cartMapper.selectCartByUserId(userId);
         List<CartProductVo> cartProductVoList = Lists.newArrayList();
 
         BigDecimal cartTotalPrice = new BigDecimal("0");
 
-        if (CollectionUtils.isNotEmpty(cartList)) {
-            for (Cart cartItem : cartList) {
+        if(CollectionUtils.isNotEmpty(cartList)){
+            for(Cart cartItem : cartList){
                 CartProductVo cartProductVo = new CartProductVo();
                 cartProductVo.setId(cartItem.getId());
                 cartProductVo.setUserId(userId);
                 cartProductVo.setProductId(cartItem.getProductId());
 
                 Product product = productMapper.selectByPrimaryKey(cartItem.getProductId());
-                if (product != null) {
+                if(product != null){
                     cartProductVo.setProductMainImage(product.getMainImage());
                     cartProductVo.setProductName(product.getName());
                     cartProductVo.setProductSubtitle(product.getSubtitle());
@@ -86,11 +143,11 @@ public class CartServiceImpl implements ICartService {
                     cartProductVo.setProductStock(product.getStock());
                     //判断库存
                     int buyLimitCount = 0;
-                    if (product.getStock() >= cartItem.getQuantity()) {
+                    if(product.getStock() >= cartItem.getQuantity()){
                         //库存充足的时候
                         buyLimitCount = cartItem.getQuantity();
                         cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_SUCCESS);
-                    } else {
+                    }else{
                         buyLimitCount = product.getStock();
                         cartProductVo.setLimitQuantity(Const.Cart.LIMIT_NUM_FAIL);
                         //购物车中更新有效库存
@@ -101,13 +158,13 @@ public class CartServiceImpl implements ICartService {
                     }
                     cartProductVo.setQuantity(buyLimitCount);
                     //计算总价
-                    cartProductVo.setProductTotalPrice(BigDecimalUtil.mul(product.getPrice().doubleValue(), cartProductVo.getQuantity()));
+                    cartProductVo.setProductTotalPrice(BigDecimalUtil.mul(product.getPrice().doubleValue(),cartProductVo.getQuantity()));
                     cartProductVo.setProductChecked(cartItem.getChecked());
                 }
 
-                if (cartItem.getChecked() == Const.Cart.CHECKED) {
+                if(cartItem.getChecked() == Const.Cart.CHECKED){
                     //如果已经勾选,增加到整个的购物车总价中
-                    cartTotalPrice = BigDecimalUtil.add(cartTotalPrice.doubleValue(), cartProductVo.getProductTotalPrice().doubleValue());
+                    cartTotalPrice = BigDecimalUtil.add(cartTotalPrice.doubleValue(),cartProductVo.getProductTotalPrice().doubleValue());
                 }
                 cartProductVoList.add(cartProductVo);
             }
@@ -120,65 +177,37 @@ public class CartServiceImpl implements ICartService {
         return cartVo;
     }
 
-    private boolean getAllCheckedStatus(Integer userId) {
-        if (userId == null) {
+    private boolean getAllCheckedStatus(Integer userId){
+        if(userId == null){
             return false;
         }
         return cartMapper.selectCartProductCheckedStatusByUserId(userId) == 0;
+
     }
 
-    @Override
-    public ServiceResponse<CartVo> list(Integer userId) {
-        if (userId == null) {
-            ServiceResponse.createByErrorMessage("param exception");
-        }
-        CartVo cartVoLimit = getCartVoLimit(userId);
-        return ServiceResponse.createBySuccess(cartVoLimit);
-    }
 
-    @Override
-    public ServiceResponse<CartVo> update(Integer userId, Integer productId, Integer count) {
-        if (productId == null || count == null) {
-            return ServiceResponse.createByErrorMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
-        }
-        //first check Cart is exist
-        Cart cart = cartMapper.selectCartByUserIdAndProductId(userId, productId);
-        if (cart != null) {
-            cart.setQuantity(count);
-        }
-        int resultDB = cartMapper.updateByPrimaryKeySelective(cart);
-        if (resultDB == 0) {
-            return ServiceResponse.createByErrorMessage("update DB fail");
-        }
-        return list(userId);
-    }
 
-    @Override
-    public ServiceResponse<CartVo> delete(Integer userId, String productIds) {
-        List<String> productList = Splitter.on(",").splitToList(productIds);
-        if (productList == null) {
-            return ServiceResponse.createByErrorMessage(ResponseCode.ILLEGAL_ARGUMENT.getCode(), ResponseCode.ILLEGAL_ARGUMENT.getDesc());
-        }
 
-        int resultDB = cartMapper.deleteByUserIdProductIds(userId, productList);
-        if (resultDB == 0) {
-            return ServiceResponse.createByErrorMessage("delete DB fail");
-        }
-        return list(userId);
-    }
 
-    @Override
-    public ServiceResponse<CartVo> checkedOrUncheckedProduct(Integer userId, Integer productId, Integer checked) {
-        cartMapper.checkedOrUncheckedProduct(userId,productId, checked);
-        return list(userId);
-    }
 
-    @Override
-    public ServiceResponse<Integer> getCartProductCount(Integer userId) {
-        if (userId == null) {
-            return ServiceResponse.createBySuccess(0);
-        }
-        int resultDB = cartMapper.selectCartProductCount(userId);
-        return ServiceResponse.createBySuccess(resultDB);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
