@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.http.HttpSession;
 
 @Controller
@@ -141,7 +140,7 @@ public class UserController {
         ServiceResponse response = iUserService.updateUserInfo(user);
         if (response.isSuccess()) {
             //更新session信息
-            session.setAttribute(Const.CURRENT_USER,response.getData());
+            session.setAttribute(Const.CURRENT_USER, response.getData());
         }
         return response;
     }
